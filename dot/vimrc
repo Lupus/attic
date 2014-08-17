@@ -1,0 +1,152 @@
+set nocompatible
+set hlsearch
+set modeline
+set smartindent
+set number
+setlocal spell spelllang=en
+set cinoptions=:0
+" :args ~/src/myproject/**/*.ttl | argdo execute "normal gg=G" | update
+set noet
+" SHIFT-Del are Cut
+vnoremap <S-Del> "+x
+
+" CTRL-Insert are Copy
+vnoremap <C-Insert> "+y
+
+" SHIFT-Insert are Paste
+map <S-Insert> "+gP
+cmap <S-Insert> <C-R>+
+
+filetype off
+
+set rtp+=~/.vim/bundle/vundle/
+call vundle#rc()
+
+Bundle 'gmarik/vundle'
+Bundle 'Align'
+Bundle 'git://git.wincent.com/command-t.git'
+Bundle 'Valloric/YouCompleteMe'
+Bundle 'scrooloose/syntastic'
+Bundle 'altercation/vim-colors-solarized'
+
+set background=dark
+set colorcolumn=81
+if has('gui_running')
+	highlight ColorColumn guibg=#252525
+	colorscheme solarized
+else
+	" highlight ColorColumn guibg=#252525
+	set t_Co=16
+	set mouse=a
+	colorscheme solarized
+	" colorscheme torte
+	" highlight ColorColumn ctermbg=8
+endif
+
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches()
+
+filetype plugin indent on
+
+if has("gui_running")
+	runtime ftplugin/man.vim
+	nmap K :Man <cword><CR>
+	set guioptions-=m  "remove menu bar
+	set guioptions-=T  "remove toolbar
+	set guioptions+=LlRrb
+	set guioptions-=LlRrb
+	set guifont=Monospace\ 12
+endif
+
+autocmd BufRead,BufNewFile *.g set syntax=antlr3
+autocmd BufRead,BufNewFile *.ll set filetype=llvm
+
+function! CheckPatchFunction()
+	let s:save_makeprg = &makeprg
+	set makeprg=checkpatch.pl\ %
+	make
+	let &makeprg = s:save_makeprg
+endfunction
+
+command! CheckPatch :call CheckPatchFunction()
+
+let g:load_doxygen_syntax=1
+let g:ycm_add_preview_to_completeopt=1
+let g:ycm_cache_omnifunc=0
+
+if has("gui_running")
+	set showtabline=2 " always show tabs in gvim, but not vim
+endif
+" set up tab labels with tab number, buffer name, number of windows
+function! GuiTabLabel()
+  let label = ''
+  let bufnrlist = tabpagebuflist(v:lnum)
+  " Add '+' if one of the buffers in the tab page is modified
+  for bufnr in bufnrlist
+    if getbufvar(bufnr, "&modified")
+      let label = '+'
+      break
+    endif
+  endfor
+  " Append the tab number
+  let label .= v:lnum.': '
+  " Append the buffer name
+  let name = bufname(bufnrlist[tabpagewinnr(v:lnum) - 1])
+  if name == ''
+    " give a name to no-name documents
+    if &buftype=='quickfix'
+      let name = '[Quickfix List]'
+    else
+      let name = '[No Name]'
+    endif
+  else
+    " get only the file name
+    let name = fnamemodify(name,":t")
+  endif
+  let label .= name
+  " Append the number of windows in the tab page
+  let wincount = tabpagewinnr(v:lnum, '$')
+  return label . '  [' . wincount . ']'
+endfunction
+set guitablabel=%{GuiTabLabel()}
+
+" set up tab tooltips with every buffer name
+function! GuiTabToolTip()
+  let tip = ''
+  let bufnrlist = tabpagebuflist(v:lnum)
+  for bufnr in bufnrlist
+    " separate buffer entries
+    if tip!=''
+      let tip .= " \n "
+    endif
+    " Add name of buffer
+    let name=bufname(bufnr)
+    if name == ''
+      " give a name to no name documents
+      if getbufvar(bufnr,'&buftype')=='quickfix'
+        let name = '[Quickfix List]'
+      else
+        let name = '[No Name]'
+      endif
+    endif
+    let tip.=name
+    " add modified/modifiable flags
+    if getbufvar(bufnr, "&modified")
+      let tip .= ' [+]'
+    endif
+    if getbufvar(bufnr, "&modifiable")==0
+      let tip .= ' [-]'
+    endif
+  endfor
+  return tip
+endfunction
+set guitabtooltip=%{GuiTabToolTip()}
+
+let g:ycm_confirm_extra_conf = 0
+
+" Filetypes
+au BufRead,BufNewFile *.rl set filetype=ragel
