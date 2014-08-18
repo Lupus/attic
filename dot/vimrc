@@ -3,6 +3,11 @@ set hlsearch
 set modeline
 set smartindent
 set number
+set backspace=indent,eol,start " backspace over everything in insert mode
+syntax on
+
+au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
 setlocal spell spelllang=en
 set cinoptions=:0
 " :args ~/src/myproject/**/*.ttl | argdo execute "normal gg=G" | update
