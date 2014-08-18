@@ -19,15 +19,17 @@ cmap <S-Insert> <C-R>+
 
 filetype off
 
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
 
-Bundle 'gmarik/vundle'
-Bundle 'Align'
-Bundle 'git://git.wincent.com/command-t.git'
-Bundle 'Valloric/YouCompleteMe'
-Bundle 'scrooloose/syntastic'
-Bundle 'altercation/vim-colors-solarized'
+Plugin 'gmarik/Vundle.vim'
+Plugin 'Align'
+Plugin 'git://git.wincent.com/command-t.git'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'scrooloose/syntastic'
+Plugin 'altercation/vim-colors-solarized'
+
+call vundle#end()
 
 set background=dark
 set colorcolumn=81
