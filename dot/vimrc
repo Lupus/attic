@@ -44,7 +44,7 @@ if has('gui_running')
 else
 	" highlight ColorColumn guibg=#252525
 	set t_Co=16
-	set mouse=a
+	set mouse=
 	colorscheme solarized
 	" colorscheme torte
 	" highlight ColorColumn ctermbg=8
@@ -84,6 +84,9 @@ command! CheckPatch :call CheckPatchFunction()
 let g:load_doxygen_syntax=1
 let g:ycm_add_preview_to_completeopt=1
 let g:ycm_cache_omnifunc=0
+let g:ycm_autoclose_preview_window_after_completion=0
+let g:ycm_autoclose_preview_window_after_insertion=1
+nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 
 if has("gui_running")
 	set showtabline=2 " always show tabs in gvim, but not vim
