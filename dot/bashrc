@@ -2,10 +2,10 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-source ~/.bash_git
-
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
+
+source ~/.bash_git
 
 # don't put duplicate lines in the history. See bash(1) for more options
 # ... or force ignoredups and ignorespace
@@ -114,6 +114,27 @@ export P4CLIENT=kolkhovskiy-laptop
 export P4USER=kolkhovskiy
 export P4DIFF="git diff"
 
+export PATH=/home/kolkhovskiy/lib/mxe/usr/bin:/home/kolkhovskiy/git/gops-tools:$PATH
+export PATH=/opt/intel/bin:$PATH
+export PATH=/opt/cisco/anyconnect/bin:$PATH
+export PATH=/usr/local/cuda-6.0/bin:$PATH
+export PYTHONPATH=/home/kolkhovskiy/3rdparty/nginx-gdb-utils:$PYTHONPATH
+
+SSHAGENT=/usr/bin/ssh-agent
+SSHAGENTARGS="-s"
+if [ -z "$TMUX" ]; then
+	if [ ! -z "$SSH_TTY" ]; then
+		if [ -z "$SSH_AUTH_SOCK" -a -x "$SSHAGENT" ]; then
+			eval `$SSHAGENT $SSHAGENTARGS`
+			trap "kill $SSH_AGENT_PID" 0
+		fi
+		if [ ! -z "SSH_AUTH_SOCK" ]; then
+			ln -sf "$SSH_AUTH_SOCK" "$HOME/.wrap_auth_sock"
+		fi
+		export SSH_AUTH_SOCK="$HOME/.wrap_auth_sock"
+	fi
+fi
+
 xpath()
 {
 	if [ $# -ne 2]; then
@@ -123,25 +144,17 @@ xpath()
 	echo "cat $1" | xmllint --shell $2 | sed '/^\/ >/d'
 }
 
-export GTL_CONFIG_SOURCE=/home/kolkhovskiy/perforce/kolkhovskiy-laptop/sw/devrel/testlab/GTLInfrastructure/Configuration/release/source/GTLConfig/Regions
-export GTL_CONFIG_LINKED=/home/kolkhovskiy/perforce/kolkhovskiy-laptop/sw/devrel/testlab/GTLInfrastructure/Configuration/release/linked
-
-export PATH=/home/kolkhovskiy/lib/mxe/usr/bin:$PATH
-export PATH=/opt/intel/bin:$PATH
-export PATH=/opt/cisco/anyconnect/bin:$PATH
-export PATH=/usr/local/cuda-6.0/bin:$PATH
-export PYTHONPATH=/home/kolkhovskiy/3rdparty/nginx-gdb-utils:$PYTHONPATH
 
 git-build() {
-[ -s debian/control ] || { echo "You must chdir into project root"; return; }
-pkg=`fgrep Source debian/control | awk '{ print $2 }'`
-[ -z "$1" ] && ver=`git tag | sort -V | tail -1` || ver=$1
-echo $ver
-git-archive-all --prefix "$pkg-$ver/" "/var/tmp/source.$$.tar.gz"
-cd /var/tmp/
-rm -f $pkg*.dsc
-tar xf source.$$.tar.gz
-dpkg-source -b $pkg-$ver
-sudo cowbuilder --build $pkg*.dsc
-cd /var/cache/pbuilder/result
+	[ -s debian/control ] || { echo "You must chdir into project root"; return; }
+	pkg=`fgrep Source debian/control | awk '{ print $2 }'`
+	[ -z "$1" ] && ver=`git tag | sort -V | tail -1` || ver=$1
+	echo $ver
+	git-archive-all --prefix "$pkg-$ver/" "/var/tmp/source.$$.tar.gz"
+	cd /var/tmp/
+	rm -f $pkg*.dsc
+	tar xf source.$$.tar.gz
+	dpkg-source -b $pkg-$ver
+	sudo cowbuilder --build $pkg*.dsc
+	cd /var/cache/pbuilder/result
 }
