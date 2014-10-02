@@ -104,7 +104,20 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 	. /etc/bash_completion
 fi
 
+export LANGUAGE=C
+export LC_ALL=C
+export LC_PAPER=C
+export LC_ADDRESS=C
+export LC_MONETARY=C
+export LC_NUMERIC=C
+export LC_TELEPHONE=C
 export LC_MESSAGES=C
+export LC_IDENTIFICATION=C
+export LC_MEASUREMENT=C
+export LC_TIME=C
+export LC_NAME=C
+export LANG=C
+
 export EDITOR=vim
 
 alias dch='dch -D unstable --distributor GTL'
@@ -113,12 +126,6 @@ export P4PORT=p4proxy-moscow:2006
 export P4CLIENT=kolkhovskiy-laptop
 export P4USER=kolkhovskiy
 export P4DIFF="git diff"
-
-export PATH=/home/kolkhovskiy/lib/mxe/usr/bin:/home/kolkhovskiy/git/gops-tools:$PATH
-export PATH=/opt/intel/bin:$PATH
-export PATH=/opt/cisco/anyconnect/bin:$PATH
-export PATH=/usr/local/cuda-6.0/bin:$PATH
-export PYTHONPATH=/home/kolkhovskiy/3rdparty/nginx-gdb-utils:$PYTHONPATH
 
 SSHAGENT=/usr/bin/ssh-agent
 SSHAGENTARGS="-s"
