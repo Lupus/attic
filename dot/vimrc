@@ -6,6 +6,8 @@ set number
 set backspace=indent,eol,start " backspace over everything in insert mode
 syntax on
 
+set switchbuf=usetab
+
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
 setlocal spell spelllang=en
@@ -69,8 +71,6 @@ if has("gui_running")
 	set guifont=Monospace\ 12
 endif
 
-autocmd BufRead,BufNewFile *.g set syntax=antlr3
-autocmd BufRead,BufNewFile *.ll set filetype=llvm
 
 function! CheckPatchFunction()
 	let s:save_makeprg = &makeprg
@@ -88,75 +88,53 @@ let g:ycm_autoclose_preview_window_after_completion=0
 let g:ycm_autoclose_preview_window_after_insertion=1
 nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 
-if has("gui_running")
-	set showtabline=2 " always show tabs in gvim, but not vim
-endif
-" set up tab labels with tab number, buffer name, number of windows
-function! GuiTabLabel()
-  let label = ''
-  let bufnrlist = tabpagebuflist(v:lnum)
-  " Add '+' if one of the buffers in the tab page is modified
-  for bufnr in bufnrlist
-    if getbufvar(bufnr, "&modified")
-      let label = '+'
-      break
-    endif
-  endfor
-  " Append the tab number
-  let label .= v:lnum.': '
-  " Append the buffer name
-  let name = bufname(bufnrlist[tabpagewinnr(v:lnum) - 1])
-  if name == ''
-    " give a name to no-name documents
-    if &buftype=='quickfix'
-      let name = '[Quickfix List]'
-    else
-      let name = '[No Name]'
-    endif
-  else
-    " get only the file name
-    let name = fnamemodify(name,":t")
-  endif
-  let label .= name
-  " Append the number of windows in the tab page
-  let wincount = tabpagewinnr(v:lnum, '$')
-  return label . '  [' . wincount . ']'
-endfunction
-set guitablabel=%{GuiTabLabel()}
-
-" set up tab tooltips with every buffer name
-function! GuiTabToolTip()
-  let tip = ''
-  let bufnrlist = tabpagebuflist(v:lnum)
-  for bufnr in bufnrlist
-    " separate buffer entries
-    if tip!=''
-      let tip .= " \n "
-    endif
-    " Add name of buffer
-    let name=bufname(bufnr)
-    if name == ''
-      " give a name to no name documents
-      if getbufvar(bufnr,'&buftype')=='quickfix'
-        let name = '[Quickfix List]'
-      else
-        let name = '[No Name]'
-      endif
-    endif
-    let tip.=name
-    " add modified/modifiable flags
-    if getbufvar(bufnr, "&modified")
-      let tip .= ' [+]'
-    endif
-    if getbufvar(bufnr, "&modifiable")==0
-      let tip .= ' [-]'
-    endif
-  endfor
-  return tip
-endfunction
-set guitabtooltip=%{GuiTabToolTip()}
 
 let g:ycm_confirm_extra_conf = 0
 
 " Filetypes
-au BufRead,BufNewFile *.rl set filetype=ragel
+autocmd BufRead,BufNewFile *.g set syntax=antlr3
+autocmd BufRead,BufNewFile *.ll set filetype=llvm
+autocmd BufRead,BufNewFile *.rl set filetype=ragel
+
+"
+" buffer/split/tab re-use magic
+"
+
+function! s:BufHidden(buffer)
+  let bufno = bufnr(a:buffer)
+  let listed_buffers = ''
+
+  redir => listed_buffers
+  silent ls
+  redir END
+
+  for line in split(listed_buffers, "\n")
+    let components = split(line)
+    if components[0] == bufno
+      return match(components[1], 'h') != -1
+    endif
+  endfor
+  return 0
+endfunction
+
+function! s:GotoOrOpen(command, ...)
+  for file in a:000
+    " bufwinnr() doesn't see windows in other tabs, meaning we open them again
+    " instead of switching to the other tab; but bufexists() sees hidden
+    " buffers, and if we try to open one of those, we get an unwanted split.
+    if bufwinnr(file) != -1 || (bufexists(file) && !s:BufHidden(file))
+      exec "sb " . file
+    else
+      exec a:command . " " . file
+    endif
+  endfor
+endfunction
+
+command! -nargs=+ GotoOrOpen call s:GotoOrOpen(<f-args>)
+
+let g:CommandTAcceptSelectionCommand = 'GotoOrOpen e'
+let g:CommandTAcceptSelectionTabCommand = 'GotoOrOpen tabe'
+let g:CommandTAcceptSelectionSplitCommand = 'GotoOrOpen sp'
+let g:CommandTAcceptSelectionVSplitCommand = 'GotoOrOpen vs'
+
+nnoremap <silent> <leader>b :CommandTMRU<CR>
