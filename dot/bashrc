@@ -18,6 +18,9 @@ shopt -s histappend
 HISTSIZE=
 HISTFILESIZE=
 
+# make sure we flush the history for each command
+export PROMPT_COMMAND='history -a'
+
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
@@ -124,11 +127,6 @@ export LANG=C
 export EDITOR=vim
 
 alias dch='dch -D unstable --distributor GTL'
-
-export P4PORT=p4proxy-moscow:2006
-export P4CLIENT=kolkhovskiy-laptop
-export P4USER=kolkhovskiy
-export P4DIFF="git diff"
 
 SSHAGENT=/usr/bin/ssh-agent
 SSHAGENTARGS="-s"
